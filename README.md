@@ -104,3 +104,55 @@ Inicie o projeto executando a classe principal que contém o método main() do S
 
  Documente os endpoints da API, incluindo suas entradas, saídas e qualquer informação relevante para facilitar o uso da API pelos desenvolvedores frontend. É realizado a documentação utilizando o Swagger, pode ser acessado em `http://localhost:8080/swagger-ui/index.html#/`
  Certifique-se de que a documentação da API esteja sempre atualizada conforme novos endpoints são adicionados ou alterados no projeto.
+
+
+ # Aplicação
+
+ ## Gerações
+
+ As gerações são categorizadas por tipo:
+    P - Planejamento
+    A - Atividades
+    M - Monitoria
+    C - Comunicações
+
+ ### Criar gerações novas
+
+ Para realizar criação de novas gerações, basta inserir uma nova geração no Banco de Dados na tabela ``geracao_tipo``,
+
+  ###### Observação
+
+ Sempre que for criado uma geração nova deve ser inserido a categoria da geração na tabela ``geracao_tipo_categoria``, e em seguida os parametros na ``geracao_tipo_parametro``
+
+
+#### Listagem de gerações no Front
+    A listagem é feita de forma bem simples através do endpoint ``/geracao-tipo``
+
+```javascript
+  export const buscaGeracaoTipo = () =>
+  useQuery<IGeracaoTipoRecordGetResponse[]>(
+    'generations',
+    async (): Promise<IGeracaoTipoRecordGetResponse[]> => {
+      const { data } = await Axios.get(`${base}/geracao-tipo`)
+      return data
+    },
+    { refetchOnWindowFocus: false }
+  )
+```
+
+Após a consulta é realizado um filter para exibir de acordo com o tipo da geração
+
+```javascript
+		{data?.filter((generation) => generation.tipo === 'P')
+                  .map((generation) => (
+                    <Cartao
+                      title={generation.nome}
+                      text={generation.descricao}
+                      icon={generation.icone}
+                      link={`/geracao/${generation.id}`}
+                    />
+        ))}
+```
+
+
+
