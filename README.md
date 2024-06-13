@@ -120,12 +120,12 @@ Inicie o projeto executando a classe principal que contém o método main() do S
 
  Para realizar criação de novas gerações, basta inserir uma nova geração no Banco de Dados na tabela ``geracao_tipo``,
 
-  ###### Observação
+###### Observação
 
  Sempre que for criado uma geração nova deve ser inserido a categoria da geração na tabela ``geracao_tipo_categoria``, e em seguida os parametros na ``geracao_tipo_parametro``
 
 
-#### Listagem de gerações no Front
+### Listagem de gerações no Front
     A listagem é feita de forma bem simples através do endpoint ``/geracao-tipo``
 
 ```javascript
@@ -151,8 +151,167 @@ Após a consulta é realizado um filter para exibir de acordo com o tipo da gera
                       icon={generation.icone}
                       link={`/geracao/${generation.id}`}
                     />
-        ))}
+    ))}
 ```
 
+
+### Realizando a geração
+
+Quando o usuário selecionar o tipo de geração que ele deseja gerar, será redirecionado para a rota `/geracao/[id]`
+
+Nessa pagina é utilizado um hook para gerenciar os estados e funções, todos os parametros que o usuário selecionar é armazenado nesse hook, e a chamada da função para realizar a geração também
+
+
+
+```javascript
+  const {
+    geracaoTipoCategorias,
+    onGerar,
+    onChange,
+    isGerando,
+    isModalSucessoOpen,
+    onModalSucessoClose,
+    isModalFalhaOpen,
+    onModalFalhaClose,
+    responseIntegracao,
+    selectedBncc,
+    setSelectedBncc,
+    selectedSegmento,
+    setSelectedSegmento,
+    assunto,
+    setAssunto,
+    response,
+    etapa,
+    setEtapa,
+    etapaAtual,
+    setEtapaAtual,
+    afeganistao,
+    onGerarNovamente,
+    selectedModalidade,
+    setSelectedModalidade,
+  } = useGeracaoState(geracaoTipo)
+
+```
+
+##### Função `onGerar` 
+
+```javascript
+const onGerar = async () => {
+    setIsGerando(true)
+    setResponseIntegracao(null)
+    setResponse('')
+    setEtapaAtual(etapaAtual + 1)
+    updateSession()
+    setContador(0)
+
+    const intervalId = setInterval(() => {
+      setContador((prevContador) => prevContador + 1)
+    }, 1000)
+
+    const body = {
+      assunto: assunto,
+      bnccId: selectedBncc,
+      nivelEnsino: selectedSegmento,
+      modalidade: selectedModalidade,
+      parametros: dadosTexto
+        .map((itemCategoria) =>
+          itemCategoria.parametros?.map?.((itemParametro: any) => {
+            let parametro = itemParametro.parametro
+            if (parametro.tipo === 'CHECK') {
+              parametro.valor = parametro.nome
+            } else {
+              parametro.valor = itemParametro.valor
+            }
+
+            return parametro
+          })
+        )
+        .reduce((a, b) => a.concat(b), []),
+      geracaoTipo: geracaoTipo,
+    }
+
+    gerar(body).then(async (response) => {
+      if (response.status >= 200 && response.status < 300) {
+        setResponseIntegracao(response.data)
+
+        const generate = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ messages: response.data.texto }),
+        })
+        setAfeganistao(afeganistao + 1)
+        const data = generate.body
+        if (!data) {
+          return
+        }
+
+        const reader = data.getReader()
+        const decoder = new TextDecoder()
+        let done = false
+
+        while (!done) {
+          const { value, done: doneReading } = await reader.read()
+          const chunkValue = decoder.decode(value)
+          done = doneReading
+          setResponse((prev) => {
+            const resultado = prev + chunkValue || ''
+            if (done) {
+              clearInterval(intervalId)
+              atualizaResultado(response.data.idGeracao, { resultado: resultado, gasto: contadorRef.current })
+              setIsGerando(false)
+            }
+            return resultado
+          })
+        }
+      } else {
+        setIsModalFalhaOpen(true)
+      }
+    })
+  }
+```
+
+
+Esta função `onGerar`, é responsável por gerar uma atividade com base nas seleções do professor. Aqui está uma explicação passo a passo do que a função faz:
+
+1. Primeiro, a função define várias variáveis de estado para seus valores iniciais. Isso inclui definir `isGerando` como `true`, limpar as respostas anteriores e incrementar a etapa atual.
+
+2. Em seguida, a função inicia um contador que aumenta a cada segundo. Isso pode ser usado para rastrear quanto tempo leva para gerar a atividade. (KPI Tempo Gasto e Economizado)
+
+3. A função então cria um objeto `body` que contém todas as informações necessárias para gerar a atividade. Isso inclui o assunto, o ID BNCC selecionado, o nível de ensino, a modalidade, os parâmetros e o tipo de geração.
+
+4. A função `gerar` é então chamada com o objeto `body` como argumento. Esta função faz uma chamada de API para um serviço que gera a atividade.
+
+	```javascript
+	export const gerar = (body: any) => {
+	  return Axios.post<IGeracaoRecordChatGPT>(`${base}`, body)
+	}
+	```
+
+5. Se a resposta da chamada de API for bem-sucedida, a função prossegue para processar a resposta.
+
+6. A resposta é então enviada para outra API (`/api/generate`) que usa o modelo GPT para gerar o texto da atividade.
+
+	```javascript
+	export async function POST(req: Request): Promise<Response> {
+	  const { messages } = await req.json()
+	  const payload: OpenAIStreamPayload = {
+		model: 'gpt-3.5-turbo',
+		messages: JSON.parse(messages),
+		temperature: 0.2,
+		max_tokens: 3900,
+		stream: true,
+	  }
+	  const stream = await OpenAIStream(payload)
+	  return new Response(stream)
+	}
+	```
+
+7. A função então lê a resposta da API `/api/generate` em chunks. Para cada chunk, ela decodifica o texto e o adiciona à resposta.
+
+8. Quando todos os chunks foram lidos e a atividade foi totalmente gerada, a função limpa o intervalo do contador, atualiza o resultado com a atividade gerada e o tempo gasto, e define `isGerando` como `false`.
+
+9. Se a chamada de API inicial falha, a função abre um modal de falha.
 
 
