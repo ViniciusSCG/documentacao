@@ -209,7 +209,7 @@ O cadastro de ministério são realizado em duas etapas
 
 ![](https://i.ibb.co/tMB1npF/imagem-2024-06-18-152918503.png)
 
-####Vincular membro ao ministério
+#### Vincular membro ao ministério
 
 Ao cadastrar ministério, selecione ele dentro da lista de ministérios na parte superior do modal vai ter uma opção "adicionar membro", será redirecionado para uma outra pagina onde será possível adicionar varios membros ao ministério.
 
