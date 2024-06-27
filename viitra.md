@@ -206,5 +206,93 @@ Esta função não retorna nenhum valor diretamente, mas utiliza uma Promise par
 - Lança um erro se as senhas fornecidas não coincidirem.
 - Lança um erro se o token fornecido for inválido ou expirado, impedindo a redefinição da senha.
 
+### Filtro PowerBI
+O componente do PowerBi fica no caminho abaixo
+
+`/components/ReportPowerBi.js`
+
+Este componente React é utilizado para incorporar relatórios do Power BI em uma aplicação web, utilizando a biblioteca powerbi-report-component. Ele segue os seguintes passos:
+
+	Importações e Configurações Iniciais: Importa as dependências necessárias, como React, serviços para obter tokens do Power BI, e componentes específicos do Power BI para incorporação de relatórios.
+	Estado e Sessão: Utiliza o hook useState para gerenciar o estado do token necessário para autenticação com o Power BI. Também usa useSession para acessar informações da sessão do usuário, como detalhes do usuário logado.
+	Efeito para Buscar Token: Um efeito (useEffect) é definido para executar uma função assíncrona que busca o token do Power BI chamando getTokenPowerBi e atualiza o estado do token.
+	Funções para Definir Filtros: Define funções getFilterParameters e getFilterListParameters para criar filtros que serão aplicados aos relatórios do Power BI. Esses filtros são baseados em parâmetros como nome da tabela, nome da coluna e valores para filtragem.
+	Manipulação do Carregamento do Relatório: A função handleReportLoad é usada para aplicar filtros ao relatório quando ele é carregado. Os filtros são baseados nas informações do usuário, como escola, município, turma, disciplina e série.
+	Manipulação da Renderização do Relatório: A função handleReportRender captura o objeto do relatório quando ele é renderizado, permitindo operações adicionais como colocar em tela cheia ou imprimir o relatório.
+	Funções Adicionais: Inclui funções para manipular eventos como mudança de página, clique em um tile e seleção de dados, embora o código específico para essas ações esteja comentado.
+	Configurações Extras: Define configurações extras para a visualização do relatório, como desabilitar o painel de filtros e o painel de navegação de conteúdo.
+	Renderização Condicional: Renderiza o componente Report do Power BI se o token estiver disponível. Passa várias propriedades para o componente, incluindo tipo de incorporação, token de acesso, URL de incorporação, ID do relatório, configurações extras, entre outros.
+	Estilo e Propriedades: Define o estilo do componente de relatório e várias propriedades para controlar a visualização e interação com o relatório, como modo de relatório, permissões e visualização de página.
 
 
+#### Funções de filtro
+
+implementada para permitir a personalização dos relatórios do Power BI com base em critérios específicos, como escola, município, turma, disciplina e série. Isso é feito através de duas funções principais: getFilterParameters e getFilterListParameters, e a aplicação desses filtros é gerenciada pela função handleReportLoad.
+
+##### getFilterParameters
+
+```javascript
+  const getFilterParameters = (tableName, columnName, value) => {
+    return {
+      $schema: "http://powerbi.com/product/schema#basic",
+      target: {
+        table: tableName,
+        column: columnName,
+      },
+      operator: "In",
+      values: [value],
+      
+    };
+  };
+```
+Esta função cria um filtro baseado em um único valor para uma coluna específica de uma tabela. É utilizada quando se deseja filtrar os dados do relatório por um único critério, como um ID específico.
+
+- Parâmetros: Recebe o nome da tabela (tableName), o nome da coluna (columnName) e o valor (value) pelo qual filtrar.
+- Retorno: Retorna um objeto de filtro que segue o esquema básico do Power BI, especificando a tabela e coluna alvo, o operador de filtro (In), e um array de valores para filtragem (neste caso, um único valor).
+
+##### getFilterListParameters
+
+```javascript
+  const getFilterListParameters = (tableName, columnName, value) => {
+    return {
+      $schema: "http://powerbi.com/product/schema#basic",
+      target: {
+        table: tableName,
+        column: columnName,
+      },
+      operator: "In",
+      values: value,
+    };
+  };
+```
+
+Similar à getFilterParameters, mas projetada para aceitar uma lista de valores para filtragem, permitindo a aplicação de filtros mais complexos baseados em múltiplos valores para uma única coluna
+
+- Parâmetros: Assim como getFilterParameters, recebe o nome da tabela, o nome da coluna, mas o value aqui é esperado ser um array de valores.
+- Retorno: Retorna um objeto de filtro que permite filtrar a coluna especificada por qualquer um dos valores fornecidos no array values.
+
+##### handleReportLoad
+
+```javascript
+  const handleReportLoad = (report) => {
+    
+    const filterEscola = getFilterParameters("tb_escola", "id_escola", user.escola);
+    const filterMunicipio = getFilterParameters("tb_municipio", "id_municipio", user.municipio);
+    const filterTurma = getFilterListParameters("tb_turma", "id_turma", user.turmas);
+    const filterDisciplina = getFilterParameters("tb_disciplina", "id_disciplina", user.disciplina);
+    const filterSerie = getFilterListParameters("tb_serie", "id_serie", user.series);
+
+    report.getFilters().then((allTargetFilters) => {
+      user.escola && allTargetFilters.push(filterEscola);
+      user.municipio && allTargetFilters.push(filterMunicipio);
+      user.turma && allTargetFilters.push(filterTurma);
+      user.disciplina && allTargetFilters.push(filterDisciplina);
+      user.serie && allTargetFilters.push(filterSerie);
+      report.setFilters(allTargetFilters);
+    });
+  };
+```
+1. Esta função é chamada quando o relatório é carregado. Ela utiliza as funções de filtro para criar filtros específicos baseados nas informações do usuário e aplica esses filtros ao relatório.
+2. Criação de Filtros: Primeiro, cria filtros individuais para escola, município, turma, disciplina e série, utilizando as funções de filtro descritas anteriormente. Os valores para esses filtros são obtidos das informações do usuário (user).
+3. Aplicação de Filtros: A função então obtém os filtros atualmente aplicados ao relatório (se houver) usando report.getFilters(). Ela adiciona os novos filtros criados à lista de filtros existentes, verificando se há valores relevantes nas informações do usuário para cada filtro antes de adicioná-los.
+4. Atualização dos Filtros no Relatório: Por fim, a lista atualizada de filtros é aplicada ao relatório usando report.setFilters(allTargetFilters). Isso atualiza a visualização do relatório para refletir apenas os dados que correspondem aos critérios de filtragem especificados.
