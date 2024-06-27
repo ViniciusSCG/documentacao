@@ -211,18 +211,25 @@ O componente do PowerBi fica no caminho abaixo
 
 `/components/ReportPowerBi.js`
 
-Este componente React é utilizado para incorporar relatórios do Power BI em uma aplicação web, utilizando a biblioteca powerbi-report-component. Ele segue os seguintes passos:
+Este componente é utilizado para incorporar relatórios do Power BI em uma aplicação web, utilizando a biblioteca powerbi-report-component. Ele segue os seguintes passos:
 
-	Importações e Configurações Iniciais: Importa as dependências necessárias, como React, serviços para obter tokens do Power BI, e componentes específicos do Power BI para incorporação de relatórios.
-	Estado e Sessão: Utiliza o hook useState para gerenciar o estado do token necessário para autenticação com o Power BI. Também usa useSession para acessar informações da sessão do usuário, como detalhes do usuário logado.
-	Efeito para Buscar Token: Um efeito (useEffect) é definido para executar uma função assíncrona que busca o token do Power BI chamando getTokenPowerBi e atualiza o estado do token.
-	Funções para Definir Filtros: Define funções getFilterParameters e getFilterListParameters para criar filtros que serão aplicados aos relatórios do Power BI. Esses filtros são baseados em parâmetros como nome da tabela, nome da coluna e valores para filtragem.
-	Manipulação do Carregamento do Relatório: A função handleReportLoad é usada para aplicar filtros ao relatório quando ele é carregado. Os filtros são baseados nas informações do usuário, como escola, município, turma, disciplina e série.
-	Manipulação da Renderização do Relatório: A função handleReportRender captura o objeto do relatório quando ele é renderizado, permitindo operações adicionais como colocar em tela cheia ou imprimir o relatório.
-	Funções Adicionais: Inclui funções para manipular eventos como mudança de página, clique em um tile e seleção de dados, embora o código específico para essas ações esteja comentado.
-	Configurações Extras: Define configurações extras para a visualização do relatório, como desabilitar o painel de filtros e o painel de navegação de conteúdo.
-	Renderização Condicional: Renderiza o componente Report do Power BI se o token estiver disponível. Passa várias propriedades para o componente, incluindo tipo de incorporação, token de acesso, URL de incorporação, ID do relatório, configurações extras, entre outros.
-	Estilo e Propriedades: Define o estilo do componente de relatório e várias propriedades para controlar a visualização e interação com o relatório, como modo de relatório, permissões e visualização de página.
+1. 	Importações e Configurações Iniciais: Importa as dependências necessárias, como React, serviços para obter tokens do Power BI, e componentes específicos do Power BI para incorporação de relatórios.
+
+2. 	Estado e Sessão: Utiliza o hook useState para gerenciar o estado do token necessário para autenticação com o Power BI. Também usa useSession para acessar informações da sessão do usuário, como detalhes do usuário logado.
+
+3. 	Efeito para Buscar Token: Um efeito (useEffect) é definido para executar uma função assíncrona que busca o token do Power BI chamando getTokenPowerBi e atualiza o estado do token.
+
+4. 	Funções para Definir Filtros: Define funções getFilterParameters e getFilterListParameters para criar filtros que serão aplicados aos relatórios do Power BI. Esses filtros são baseados em parâmetros como nome da tabela, nome da coluna e valores para filtragem.
+
+5. 	Manipulação do Carregamento do Relatório: A função handleReportLoad é usada para aplicar filtros ao relatório quando ele é carregado. Os filtros são baseados nas informações do usuário, como escola, município, turma, disciplina e série.
+
+6. 	Manipulação da Renderização do Relatório: A função handleReportRender captura o objeto do relatório quando ele é renderizado, permitindo operações adicionais como colocar em tela cheia ou imprimir o relatório.
+
+7. 	Configurações Extras: Define configurações extras para a visualização do relatório, como desabilitar o painel de filtros e o painel de navegação de conteúdo.
+
+8. 	Renderização Condicional: Renderiza o componente Report do Power BI se o token estiver disponível. Passa várias propriedades para o componente, incluindo tipo de incorporação, token de acesso, URL de incorporação, ID do relatório, configurações extras, entre outros.
+
+9. Estilo e Propriedades: Define o estilo do componente de relatório e várias propriedades para controlar a visualização e interação com o relatório, como modo de relatório, permissões e visualização de página.
 
 
 #### Funções de filtro
